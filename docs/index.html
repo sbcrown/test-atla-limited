@@ -1,0 +1,552 @@
+<title>ATLA Limited — Card Browser</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #ffffff;
+    --page:           #f2f1ed;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #3d3c39;
+    --muted:          #6b6a64;
+    --gridline:       #d8d6cd;
+    --baseline:       #9d9b93;
+    --border:         rgba(11,11,11,0.22);
+    --chip-border:    rgba(11,11,11,0.16);
+    --accent:         #2a78d6;
+    --good:           #0a7d0a;
+    --critical:       #b6302f;
+
+    --chip-w-bg: #f1e6c8;    --chip-w-fg: #4d3d16;
+    --chip-u-bg: #d3e4fa;    --chip-u-fg: #123f78;
+    --chip-b-bg: #d6d5d2;    --chip-b-fg: #1c1c1b;
+    --chip-r-bg: #fad3c4;    --chip-r-fg: #822511;
+    --chip-g-bg: #cdedcf;    --chip-g-fg: #0f4d15;
+    --chip-c-bg: #e4e2dc;    --chip-c-fg: #43423e;
+    --chip-m-bg: linear-gradient(100deg,#f3dd9c,#ecc274); --chip-m-fg: #4a350d;
+
+    --rare-common-bg: #e6e5e1;    --rare-common-fg: #48473f;
+    --rare-uncommon-bg: #d9e7f0;  --rare-uncommon-fg: #2c4859;
+    --rare-rare-bg: #f9e4b8;      --rare-rare-fg: #714800;
+    --rare-mythic-bg: #f8d2b8;    --rare-mythic-fg: #8a3009;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --muted:          #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.14);
+      --chip-border:    rgba(255,255,255,0.14);
+      --accent:         #3987e5;
+      --good:           #1fc21f;
+      --critical:       #e66767;
+
+      --chip-w-bg: #3d3423;    --chip-w-fg: #efe6d0;
+      --chip-u-bg: #1c3a5e;    --chip-u-fg: #9ec5f4;
+      --chip-b-bg: #2a2a28;    --chip-b-fg: #e8e8e6;
+      --chip-r-bg: #4a2418;    --chip-r-fg: #f2a58c;
+      --chip-g-bg: #1f3d22;    --chip-g-fg: #8fd99a;
+      --chip-c-bg: #2c2c2a;    --chip-c-fg: #c3c2b7;
+      --chip-m-bg: linear-gradient(100deg,#5c4310,#7a5a18); --chip-m-fg: #f5e2a8;
+
+      --rare-common-bg: #2e2e2c;    --rare-common-fg: #c9c9c5;
+      --rare-uncommon-bg: #253238;  --rare-uncommon-fg: #a9c2cf;
+      --rare-rare-bg: #4a3410;      --rare-rare-fg: #f0c060;
+      --rare-mythic-bg: #4a2010;    --rare-mythic-fg: #f2905c;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted:          #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --accent:         #3987e5;
+    --good:           #0ca30c;
+    --critical:       #e66767;
+
+    --chip-w-bg: #3d3423;    --chip-w-fg: #efe6d0;
+    --chip-u-bg: #1c3a5e;    --chip-u-fg: #9ec5f4;
+    --chip-b-bg: #2a2a28;    --chip-b-fg: #e8e8e6;
+    --chip-r-bg: #4a2418;    --chip-r-fg: #f2a58c;
+    --chip-g-bg: #1f3d22;    --chip-g-fg: #8fd99a;
+    --chip-c-bg: #2c2c2a;    --chip-c-fg: #c3c2b7;
+    --chip-m-bg: linear-gradient(100deg,#5c4310,#7a5a18); --chip-m-fg: #f5e2a8;
+
+    --rare-common-bg: #2e2e2c;    --rare-common-fg: #c9c9c5;
+    --rare-uncommon-bg: #253238;  --rare-uncommon-fg: #a9c2cf;
+    --rare-rare-bg: #4a3410;      --rare-rare-fg: #f0c060;
+    --rare-mythic-bg: #4a2010;    --rare-mythic-fg: #f2905c;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--text-primary); }
+  .viz-root { max-width: 1180px; margin: 0 auto; padding: 28px 18px 56px; }
+  h1 { font-size: 1.3rem; font-weight: 600; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 20px; max-width: 680px; line-height: 1.5; }
+
+  .toolbar {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 1px 2px rgba(11,11,11,0.04);
+  }
+  .toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .toolbar-row + .toolbar-row { border-top: 1px solid var(--gridline); padding-top: 12px; }
+  .facet-label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; margin-right: 4px; flex: none; }
+
+  #search {
+    flex: 1 1 220px;
+    min-width: 180px;
+    padding: 8px 11px;
+    border: 1px solid var(--baseline);
+    border-radius: 8px;
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .chip-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--baseline);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip-toggle .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; border: 1px solid rgba(11,11,11,0.25); }
+  .chip-toggle[aria-pressed="true"] {
+    color: var(--text-primary);
+    border-color: var(--accent);
+    background: var(--gridline);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .chip-toggle:hover { border-color: var(--accent); }
+
+  .clear-btn, .reset-sort-btn {
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: 1.5px solid var(--baseline);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .clear-btn:hover, .reset-sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle-label input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  .summary-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .summary-bar strong { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  .table-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(11,11,11,0.04);
+  }
+  .table-scroll { overflow: auto; max-height: 640px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.88rem; min-width: 900px; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--page);
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--baseline);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { background: var(--gridline); }
+  thead th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  thead th .sort-arrow { display: inline-block; width: 12px; color: var(--muted); }
+  thead th[aria-sort="none"] .sort-arrow::after { content: "⇕"; opacity: 0.35; }
+  thead th[aria-sort="ascending"] .sort-arrow::after { content: "▲"; color: var(--accent); opacity: 1; }
+  thead th[aria-sort="descending"] .sort-arrow::after { content: "▼"; color: var(--accent); opacity: 1; }
+  tbody tr:nth-child(even) td { background: var(--page); }
+  tbody td { padding: 7px 12px; border-bottom: 1px solid var(--gridline); color: var(--text-primary); white-space: nowrap; }
+  tbody tr:hover td { background: var(--gridline); }
+  td.name-cell { white-space: normal; min-width: 190px; font-weight: 600; }
+  .n-sub { display: block; font-size: 0.72rem; color: var(--text-secondary); font-weight: 500; }
+  .null-cell { color: var(--muted); font-weight: 400; }
+
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 3px 9px; border-radius: 6px;
+    border: 1px solid var(--chip-border);
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .chip-color-W { background: var(--chip-w-bg); color: var(--chip-w-fg); }
+  .chip-color-U { background: var(--chip-u-bg); color: var(--chip-u-fg); }
+  .chip-color-B { background: var(--chip-b-bg); color: var(--chip-b-fg); }
+  .chip-color-R { background: var(--chip-r-bg); color: var(--chip-r-fg); }
+  .chip-color-G { background: var(--chip-g-bg); color: var(--chip-g-fg); }
+  .chip-color-Colorless { background: var(--chip-c-bg); color: var(--chip-c-fg); }
+  .chip-color-Multicolor { background: var(--chip-m-bg); color: var(--chip-m-fg); }
+  .chip-rarity-C { background: var(--rare-common-bg); color: var(--rare-common-fg); }
+  .chip-rarity-U { background: var(--rare-uncommon-bg); color: var(--rare-uncommon-fg); }
+  .chip-rarity-R { background: var(--rare-rare-bg); color: var(--rare-rare-fg); }
+  .chip-rarity-M { background: var(--rare-mythic-bg); color: var(--rare-mythic-fg); }
+
+  .delta { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .delta-up { color: var(--good); }
+  .delta-down { color: var(--critical); }
+  .delta-arrow { display: inline-block; margin-right: 2px; }
+
+  .legend-dot-W { background: var(--chip-w-fg); }
+  .legend-dot-U { background: var(--chip-u-fg); }
+  .legend-dot-B { background: var(--chip-b-fg); }
+  .legend-dot-R { background: var(--chip-r-fg); }
+  .legend-dot-G { background: var(--chip-g-fg); }
+  .legend-dot-Colorless { background: var(--chip-c-fg); }
+  .legend-dot-Multicolor { background: var(--chip-m-fg); }
+  .legend-dot-C { background: var(--rare-common-fg); }
+  .legend-dot-Ur { background: var(--rare-uncommon-fg); }
+  .legend-dot-R2 { background: var(--rare-rare-fg); }
+  .legend-dot-M { background: var(--rare-mythic-fg); }
+
+  footer.note { color: var(--muted); font-size: 0.78rem; line-height: 1.6; max-width: 720px; margin-top: 16px; }
+</style>
+
+<div class="viz-root">
+  <h1>ATLA limited card browser</h1>
+  <p class="subtitle">281 cards. Filter by color or rarity, search by name, and click any column header to sort by that metric. Colorless = no color letters; multicolor cards keep their exact color combo (e.g. "WU") in the Color column but are filed under one Multicolor filter.</p>
+
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <input id="search" type="text" placeholder="Search card name…" aria-label="Search card name" />
+      <button class="clear-btn" id="clear-filters">Clear filters</button>
+      <label class="toggle-label"><input type="checkbox" id="show-n" /> Show sample sizes (n)</label>
+    </div>
+    <div class="toolbar-row" id="color-filters">
+      <span class="facet-label">Color</span>
+    </div>
+    <div class="toolbar-row" id="rarity-filters">
+      <span class="facet-label">Rarity</span>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <span id="summary-text">Showing 281 of 281 cards</span>
+    <span id="summary-avg"></span>
+  </div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table id="data-table">
+        <thead><tr id="header-row"></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="note">
+    Source: card-ratings-2026-07-16.csv. GIH WR = win rate in games where the card was drawn; GNS WR = win rate in games where it was seen but not drawn; IIH = GIH WR minus GNS WR (how much better the card performs when actually in hand vs. not); ALSA = average last seen at (lower = picked earlier). Blank cells mean too few recorded games for a reliable rate.
+  </footer>
+</div>
+
+<script>
+(function () {
+  const DATA =[{"name":"Aang's Journey","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":5.66,"gihWR":55.5,"nGIH":94096,"gnsWR":53.1,"nGNS":113355,"iih":2.4},{"name":"Energybending","color":"Colorless","colorRaw":"Colorless","rarity":"U","alsa":6.89,"gihWR":51.4,"nGIH":10492,"gnsWR":50.7,"nGNS":12873,"iih":0.7},{"name":"Zuko's Exile","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":7.2,"gihWR":48.7,"nGIH":21751,"gnsWR":51.0,"nGNS":29016,"iih":-2.3},{"name":"Aang, the Last Airbender","color":"W","colorRaw":"W","rarity":"U","alsa":2.36,"gihWR":60.6,"nGIH":61022,"gnsWR":55.8,"nGNS":81488,"iih":4.8},{"name":"Aang's Iceberg","color":"W","colorRaw":"W","rarity":"R","alsa":2.14,"gihWR":56.9,"nGIH":23318,"gnsWR":55.1,"nGNS":31507,"iih":1.8},{"name":"Airbender Ascension","color":"W","colorRaw":"W","rarity":"R","alsa":2.55,"gihWR":53.0,"nGIH":16520,"gnsWR":54.3,"nGNS":22213,"iih":-1.3},{"name":"Airbender's Reversal","color":"W","colorRaw":"W","rarity":"U","alsa":3.17,"gihWR":53.9,"nGIH":36459,"gnsWR":54.8,"nGNS":49506,"iih":-0.9},{"name":"Airbending Lesson","color":"W","colorRaw":"W","rarity":"C","alsa":4.19,"gihWR":56.7,"nGIH":146133,"gnsWR":56.1,"nGNS":197202,"iih":0.6},{"name":"Appa, Loyal Sky Bison","color":"W","colorRaw":"W","rarity":"U","alsa":4.67,"gihWR":51.8,"nGIH":20060,"gnsWR":54.1,"nGNS":28817,"iih":-2.3},{"name":"Appa, Steadfast Guardian","color":"W","colorRaw":"W","rarity":"M","alsa":1.56,"gihWR":59.2,"nGIH":13819,"gnsWR":54.4,"nGNS":18443,"iih":4.7},{"name":"Avatar Enthusiasts","color":"W","colorRaw":"W","rarity":"C","alsa":4.74,"gihWR":54.4,"nGIH":88843,"gnsWR":56.4,"nGNS":129329,"iih":-2.0},{"name":"Avatar's Wrath","color":"W","colorRaw":"W","rarity":"R","alsa":2.77,"gihWR":54.4,"nGIH":13761,"gnsWR":53.5,"nGNS":19143,"iih":0.8},{"name":"Compassionate Healer","color":"W","colorRaw":"W","rarity":"C","alsa":4.57,"gihWR":56.7,"nGIH":134496,"gnsWR":57.2,"nGNS":189615,"iih":-0.4},{"name":"Curious Farm Animals","color":"W","colorRaw":"W","rarity":"C","alsa":7.45,"gihWR":53.9,"nGIH":16850,"gnsWR":53.9,"nGNS":24094,"iih":-0.1},{"name":"Destined Confrontation","color":"W","colorRaw":"W","rarity":"U","alsa":6.99,"gihWR":47.0,"nGIH":3904,"gnsWR":52.3,"nGNS":5400,"iih":-5.3},{"name":"Earth Kingdom Jailer","color":"W","colorRaw":"W","rarity":"U","alsa":2.41,"gihWR":60.6,"nGIH":60580,"gnsWR":56.1,"nGNS":80020,"iih":4.6},{"name":"Earth Kingdom Protectors","color":"W","colorRaw":"W","rarity":"U","alsa":4.09,"gihWR":57.0,"nGIH":49562,"gnsWR":57.0,"nGNS":71152,"iih":-0.1},{"name":"Enter the Avatar State","color":"W","colorRaw":"W","rarity":"U","alsa":4.56,"gihWR":56.3,"nGIH":34092,"gnsWR":55.5,"nGNS":48532,"iih":0.8},{"name":"Fancy Footwork","color":"W","colorRaw":"W","rarity":"U","alsa":5.48,"gihWR":53.6,"nGIH":24002,"gnsWR":55.6,"nGNS":35592,"iih":-2.0},{"name":"Gather the White Lotus","color":"W","colorRaw":"W","rarity":"U","alsa":5.09,"gihWR":57.3,"nGIH":33097,"gnsWR":57.2,"nGNS":47846,"iih":0.1},{"name":"Glider Kids","color":"W","colorRaw":"W","rarity":"C","alsa":4.49,"gihWR":55.9,"nGIH":129111,"gnsWR":56.6,"nGNS":177071,"iih":-0.6},{"name":"Glider Staff","color":"W","colorRaw":"W","rarity":"U","alsa":3.32,"gihWR":57.9,"nGIH":58950,"gnsWR":56.2,"nGNS":80247,"iih":1.8},{"name":"Hakoda, Selfless Commander","color":"W","colorRaw":"W","rarity":"R","alsa":1.89,"gihWR":57.6,"nGIH":24646,"gnsWR":55.1,"nGNS":32651,"iih":2.5},{"name":"Invasion Reinforcements","color":"W","colorRaw":"W","rarity":"U","alsa":3.22,"gihWR":57.0,"nGIH":51902,"gnsWR":56.7,"nGNS":73479,"iih":0.3},{"name":"Jeong Jeong's Deserters","color":"W","colorRaw":"W","rarity":"C","alsa":4.86,"gihWR":55.6,"nGIH":126950,"gnsWR":57.3,"nGNS":179495,"iih":-1.7},{"name":"Kyoshi Warriors","color":"W","colorRaw":"W","rarity":"C","alsa":4.64,"gihWR":56.4,"nGIH":129277,"gnsWR":56.8,"nGNS":182263,"iih":-0.3},{"name":"The Legend of Yangchen","color":"W","colorRaw":"W","rarity":"M","alsa":1.67,"gihWR":65.9,"nGIH":17336,"gnsWR":54.2,"nGNS":22648,"iih":11.7},{"name":"Master Piandao","color":"W","colorRaw":"W","rarity":"U","alsa":3.64,"gihWR":54.9,"nGIH":35406,"gnsWR":55.9,"nGNS":50339,"iih":-1.0},{"name":"Momo, Friendly Flier","color":"W","colorRaw":"W","rarity":"R","alsa":3.06,"gihWR":58.3,"nGIH":18248,"gnsWR":55.0,"nGNS":25196,"iih":3.3},{"name":"Momo, Playful Pet","color":"W","colorRaw":"W","rarity":"U","alsa":3.29,"gihWR":57.8,"nGIH":49132,"gnsWR":56.1,"nGNS":69075,"iih":1.7},{"name":"Path to Redemption","color":"W","colorRaw":"W","rarity":"C","alsa":3.68,"gihWR":56.9,"nGIH":135924,"gnsWR":56.4,"nGNS":186329,"iih":0.5},{"name":"Rabaroo Troop","color":"W","colorRaw":"W","rarity":"C","alsa":7.41,"gihWR":52.6,"nGIH":20573,"gnsWR":55.0,"nGNS":29327,"iih":-2.4},{"name":"Razor Rings","color":"W","colorRaw":"W","rarity":"C","alsa":4.57,"gihWR":55.4,"nGIH":98753,"gnsWR":55.7,"nGNS":137509,"iih":-0.4},{"name":"Sandbenders' Storm","color":"W","colorRaw":"W","rarity":"C","alsa":6.34,"gihWR":52.6,"nGIH":35577,"gnsWR":54.8,"nGNS":51081,"iih":-2.2},{"name":"South Pole Voyager","color":"W","colorRaw":"W","rarity":"R","alsa":1.85,"gihWR":61.1,"nGIH":26215,"gnsWR":54.8,"nGNS":34959,"iih":6.3},{"name":"Southern Air Temple","color":"W","colorRaw":"W","rarity":"U","alsa":5.81,"gihWR":50.4,"nGIH":13142,"gnsWR":47.3,"nGNS":15807,"iih":3.1},{"name":"Suki, Courageous Rescuer","color":"W","colorRaw":"W","rarity":"R","alsa":1.75,"gihWR":61.4,"nGIH":26331,"gnsWR":54.8,"nGNS":35583,"iih":6.6},{"name":"Team Avatar","color":"W","colorRaw":"W","rarity":"U","alsa":3.23,"gihWR":54.6,"nGIH":38292,"gnsWR":55.1,"nGNS":54607,"iih":-0.5},{"name":"United Front","color":"W","colorRaw":"W","rarity":"M","alsa":1.5,"gihWR":65.1,"nGIH":16293,"gnsWR":53.9,"nGNS":21974,"iih":11.2},{"name":"Vengeful Villagers","color":"W","colorRaw":"W","rarity":"U","alsa":6.75,"gihWR":50.8,"nGIH":8556,"gnsWR":54.5,"nGNS":12305,"iih":-3.7},{"name":"Water Tribe Captain","color":"W","colorRaw":"W","rarity":"C","alsa":5.4,"gihWR":55.7,"nGIH":105986,"gnsWR":57.0,"nGNS":151805,"iih":-1.3},{"name":"Water Tribe Rallier","color":"W","colorRaw":"W","rarity":"U","alsa":2.77,"gihWR":59.6,"nGIH":65052,"gnsWR":56.5,"nGNS":85847,"iih":3.0},{"name":"Yip Yip!","color":"W","colorRaw":"W","rarity":"C","alsa":6.34,"gihWR":56.2,"nGIH":85364,"gnsWR":57.2,"nGNS":125697,"iih":-1.0},{"name":"Accumulate Wisdom","color":"U","colorRaw":"U","rarity":"U","alsa":3.14,"gihWR":56.5,"nGIH":61151,"gnsWR":53.8,"nGNS":69473,"iih":2.7},{"name":"Benevolent River Spirit","color":"U","colorRaw":"U","rarity":"U","alsa":4.12,"gihWR":57.1,"nGIH":60588,"gnsWR":54.7,"nGNS":70898,"iih":2.4},{"name":"Boomerang Basics","color":"U","colorRaw":"U","rarity":"U","alsa":3.97,"gihWR":56.6,"nGIH":59328,"gnsWR":54.3,"nGNS":68319,"iih":2.3},{"name":"Crashing Wave","color":"U","colorRaw":"U","rarity":"U","alsa":6.42,"gihWR":52.2,"nGIH":13545,"gnsWR":51.8,"nGNS":17144,"iih":0.5},{"name":"Ember Island Production","color":"U","colorRaw":"U","rarity":"U","alsa":6.67,"gihWR":52.1,"nGIH":12353,"gnsWR":52.3,"nGNS":14697,"iih":-0.2},{"name":"First-Time Flyer","color":"U","colorRaw":"U","rarity":"C","alsa":4.83,"gihWR":56.4,"nGIH":142747,"gnsWR":54.8,"nGNS":168108,"iih":1.6},{"name":"Flexible Waterbender","color":"U","colorRaw":"U","rarity":"C","alsa":7.98,"gihWR":53.1,"nGIH":17899,"gnsWR":53.3,"nGNS":21819,"iih":-0.2},{"name":"Forecasting Fortune Teller","color":"U","colorRaw":"U","rarity":"C","alsa":4.03,"gihWR":57.5,"nGIH":196431,"gnsWR":55.1,"nGNS":229324,"iih":2.4},{"name":"Geyser Leaper","color":"U","colorRaw":"U","rarity":"C","alsa":7.14,"gihWR":51.2,"nGIH":37969,"gnsWR":52.6,"nGNS":46746,"iih":-1.4},{"name":"Giant Koi","color":"U","colorRaw":"U","rarity":"C","alsa":6.73,"gihWR":53.7,"nGIH":68937,"gnsWR":53.4,"nGNS":80054,"iih":0.3},{"name":"Gran-Gran","color":"U","colorRaw":"U","rarity":"U","alsa":3.82,"gihWR":59.3,"nGIH":67072,"gnsWR":55.0,"nGNS":79368,"iih":4.3},{"name":"Honest Work","color":"U","colorRaw":"U","rarity":"U","alsa":6.2,"gihWR":50.8,"nGIH":9524,"gnsWR":50.1,"nGNS":12019,"iih":0.7},{"name":"Iguana Parrot","color":"U","colorRaw":"U","rarity":"C","alsa":6.05,"gihWR":54.1,"nGIH":66654,"gnsWR":53.1,"nGNS":80780,"iih":1.0},{"name":"Invasion Submersible","color":"U","colorRaw":"U","rarity":"U","alsa":3.0,"gihWR":61.9,"nGIH":88316,"gnsWR":54.8,"nGNS":102474,"iih":7.2},{"name":"It'll Quench Ya!","color":"U","colorRaw":"U","rarity":"C","alsa":4.95,"gihWR":58.0,"nGIH":160683,"gnsWR":55.0,"nGNS":187983,"iih":3.0},{"name":"Katara, Bending Prodigy","color":"U","colorRaw":"U","rarity":"U","alsa":2.91,"gihWR":55.1,"nGIH":55529,"gnsWR":53.5,"nGNS":64752,"iih":1.6},{"name":"Knowledge Seeker","color":"U","colorRaw":"U","rarity":"U","alsa":3.3,"gihWR":58.3,"nGIH":77215,"gnsWR":55.3,"nGNS":88750,"iih":3.1},{"name":"The Legend of Kuruk","color":"U","colorRaw":"U","rarity":"M","alsa":1.62,"gihWR":66.0,"nGIH":19194,"gnsWR":53.4,"nGNS":21558,"iih":12.6},{"name":"Lost Days","color":"U","colorRaw":"U","rarity":"C","alsa":4.94,"gihWR":58.6,"nGIH":198484,"gnsWR":55.5,"nGNS":234071,"iih":3.1},{"name":"Master Pakku","color":"U","colorRaw":"U","rarity":"U","alsa":5.62,"gihWR":52.8,"nGIH":26205,"gnsWR":53.3,"nGNS":30859,"iih":-0.6},{"name":"The Mechanist, Aerial Artisan","color":"U","colorRaw":"U","rarity":"R","alsa":2.04,"gihWR":58.9,"nGIH":32654,"gnsWR":53.3,"nGNS":37423,"iih":5.6},{"name":"North Pole Patrol","color":"U","colorRaw":"U","rarity":"U","alsa":4.71,"gihWR":55.6,"nGIH":50922,"gnsWR":54.4,"nGNS":60044,"iih":1.2},{"name":"Octopus Form","color":"U","colorRaw":"U","rarity":"C","alsa":5.61,"gihWR":57.2,"nGIH":134148,"gnsWR":54.5,"nGNS":160094,"iih":2.7},{"name":"Otter-Penguin","color":"U","colorRaw":"U","rarity":"C","alsa":6.59,"gihWR":55.0,"nGIH":102495,"gnsWR":54.3,"nGNS":118532,"iih":0.8},{"name":"Rowdy Snowballers","color":"U","colorRaw":"U","rarity":"C","alsa":6.57,"gihWR":51.2,"nGIH":41576,"gnsWR":52.1,"nGNS":51076,"iih":-0.8},{"name":"Secret of Bloodbending","color":"U","colorRaw":"U","rarity":"M","alsa":5.4,"gihWR":48.1,"nGIH":1391,"gnsWR":48.8,"nGNS":1675,"iih":-0.7},{"name":"Serpent of the Pass","color":"U","colorRaw":"U","rarity":"U","alsa":4.95,"gihWR":53.4,"nGIH":35472,"gnsWR":52.6,"nGNS":40339,"iih":0.7},{"name":"Sokka's Haiku","color":"U","colorRaw":"U","rarity":"U","alsa":6.22,"gihWR":56.5,"nGIH":31707,"gnsWR":54.4,"nGNS":36666,"iih":2.1},{"name":"The Spirit Oasis","color":"U","colorRaw":"U","rarity":"U","alsa":6.51,"gihWR":54.1,"nGIH":9865,"gnsWR":44.0,"nGNS":10608,"iih":10.1},{"name":"Spirit Water Revival","color":"U","colorRaw":"U","rarity":"R","alsa":3.09,"gihWR":55.6,"nGIH":24634,"gnsWR":53.7,"nGNS":29314,"iih":1.9},{"name":"Teo, Spirited Glider","color":"U","colorRaw":"U","rarity":"U","alsa":3.72,"gihWR":56.4,"nGIH":54126,"gnsWR":53.8,"nGNS":64204,"iih":2.7},{"name":"Tiger-Seal","color":"U","colorRaw":"U","rarity":"R","alsa":5.73,"gihWR":53.7,"nGIH":4480,"gnsWR":51.4,"nGNS":4923,"iih":2.3},{"name":"Ty Lee, Chi Blocker","color":"U","colorRaw":"U","rarity":"R","alsa":2.06,"gihWR":60.2,"nGIH":31832,"gnsWR":54.2,"nGNS":36788,"iih":6.0},{"name":"The Unagi of Kyoshi Island","color":"U","colorRaw":"U","rarity":"R","alsa":1.94,"gihWR":59.9,"nGIH":31124,"gnsWR":53.4,"nGNS":36333,"iih":6.6},{"name":"Wan Shi Tong, Librarian","color":"U","colorRaw":"U","rarity":"M","alsa":1.45,"gihWR":65.1,"nGIH":18219,"gnsWR":53.1,"nGNS":20778,"iih":11.9},{"name":"Waterbender Ascension","color":"U","colorRaw":"U","rarity":"R","alsa":4.1,"gihWR":45.2,"nGIH":7680,"gnsWR":49.8,"nGNS":9894,"iih":-4.6},{"name":"Waterbending Lesson","color":"U","colorRaw":"U","rarity":"C","alsa":5.19,"gihWR":56.6,"nGIH":143744,"gnsWR":54.7,"nGNS":171125,"iih":1.9},{"name":"Waterbending Scroll","color":"U","colorRaw":"U","rarity":"U","alsa":5.72,"gihWR":53.9,"nGIH":28709,"gnsWR":52.2,"nGNS":32815,"iih":1.7},{"name":"Watery Grasp","color":"U","colorRaw":"U","rarity":"C","alsa":5.07,"gihWR":57.9,"nGIH":170294,"gnsWR":55.6,"nGNS":200515,"iih":2.4},{"name":"Yue, the Moon Spirit","color":"U","colorRaw":"U","rarity":"R","alsa":3.25,"gihWR":52.5,"nGIH":15325,"gnsWR":51.9,"nGNS":18825,"iih":0.6},{"name":"Azula Always Lies","color":"B","colorRaw":"B","rarity":"C","alsa":6.75,"gihWR":55.2,"nGIH":55237,"gnsWR":53.6,"nGNS":72643,"iih":1.6},{"name":"Azula, On the Hunt","color":"B","colorRaw":"B","rarity":"U","alsa":4.04,"gihWR":54.9,"nGIH":40226,"gnsWR":53.7,"nGNS":51167,"iih":1.1},{"name":"Beetle-Headed Merchants","color":"B","colorRaw":"B","rarity":"C","alsa":7.44,"gihWR":52.1,"nGIH":39266,"gnsWR":53.2,"nGNS":50635,"iih":-1.2},{"name":"Boiling Rock Rioter","color":"B","colorRaw":"B","rarity":"R","alsa":3.1,"gihWR":56.2,"nGIH":20091,"gnsWR":53.8,"nGNS":25622,"iih":2.4},{"name":"Buzzard-Wasp Colony","color":"B","colorRaw":"B","rarity":"U","alsa":6.05,"gihWR":51.0,"nGIH":17519,"gnsWR":52.6,"nGNS":23606,"iih":-1.6},{"name":"Callous Inspector","color":"B","colorRaw":"B","rarity":"C","alsa":6.28,"gihWR":55.4,"nGIH":89665,"gnsWR":54.3,"nGNS":114802,"iih":1.1},{"name":"Canyon Crawler","color":"B","colorRaw":"B","rarity":"C","alsa":6.91,"gihWR":55.3,"nGIH":60594,"gnsWR":54.2,"nGNS":75831,"iih":1.0},{"name":"Cat-Gator","color":"B","colorRaw":"B","rarity":"U","alsa":5.82,"gihWR":57.8,"nGIH":34624,"gnsWR":54.3,"nGNS":44695,"iih":3.5},{"name":"Corrupt Court Official","color":"B","colorRaw":"B","rarity":"C","alsa":5.63,"gihWR":56.2,"nGIH":118221,"gnsWR":54.9,"nGNS":148144,"iih":1.3},{"name":"Dai Li Indoctrination","color":"B","colorRaw":"B","rarity":"C","alsa":7.66,"gihWR":52.8,"nGIH":23004,"gnsWR":52.4,"nGNS":29326,"iih":0.3},{"name":"Day of Black Sun","color":"B","colorRaw":"B","rarity":"R","alsa":2.54,"gihWR":60.3,"nGIH":25679,"gnsWR":53.4,"nGNS":31152,"iih":6.9},{"name":"Deadly Precision","color":"B","colorRaw":"B","rarity":"C","alsa":5.01,"gihWR":56.7,"nGIH":120548,"gnsWR":54.4,"nGNS":153207,"iih":2.4},{"name":"Epic Downfall","color":"B","colorRaw":"B","rarity":"U","alsa":3.11,"gihWR":58.8,"nGIH":53620,"gnsWR":54.2,"nGNS":66504,"iih":4.6},{"name":"Fatal Fissure","color":"B","colorRaw":"B","rarity":"U","alsa":7.55,"gihWR":46.3,"nGIH":3748,"gnsWR":50.0,"nGNS":5154,"iih":-3.7},{"name":"The Fire Nation Drill","color":"B","colorRaw":"B","rarity":"R","alsa":2.16,"gihWR":66.5,"nGIH":29725,"gnsWR":53.1,"nGNS":37021,"iih":13.4},{"name":"Fire Nation Engineer","color":"B","colorRaw":"B","rarity":"U","alsa":4.64,"gihWR":56.2,"nGIH":36334,"gnsWR":53.7,"nGNS":47508,"iih":2.5},{"name":"Fire Navy Trebuchet","color":"B","colorRaw":"B","rarity":"U","alsa":4.26,"gihWR":55.1,"nGIH":33403,"gnsWR":52.5,"nGNS":43255,"iih":2.6},{"name":"Foggy Swamp Hunters","color":"B","colorRaw":"B","rarity":"C","alsa":8.42,"gihWR":52.5,"nGIH":14169,"gnsWR":52.3,"nGNS":17222,"iih":0.2},{"name":"Foggy Swamp Visions","color":"B","colorRaw":"B","rarity":"R","alsa":6.13,"gihWR":47.8,"nGIH":1478,"gnsWR":49.1,"nGNS":1953,"iih":-1.2},{"name":"Heartless Act","color":"B","colorRaw":"B","rarity":"U","alsa":2.94,"gihWR":60.0,"nGIH":55719,"gnsWR":53.8,"nGNS":69973,"iih":6.2},{"name":"Hog-Monkey","color":"B","colorRaw":"B","rarity":"C","alsa":8.09,"gihWR":52.0,"nGIH":13485,"gnsWR":51.8,"nGNS":18440,"iih":0.2},{"name":"Joo Dee, One of Many","color":"B","colorRaw":"B","rarity":"U","alsa":4.44,"gihWR":55.6,"nGIH":44664,"gnsWR":54.0,"nGNS":57308,"iih":1.6},{"name":"June, Bounty Hunter","color":"B","colorRaw":"B","rarity":"U","alsa":4.41,"gihWR":54.6,"nGIH":45110,"gnsWR":54.5,"nGNS":56770,"iih":0.1},{"name":"Koh, the Face Stealer","color":"B","colorRaw":"B","rarity":"M","alsa":1.84,"gihWR":64.3,"nGIH":16720,"gnsWR":53.1,"nGNS":20358,"iih":11.1},{"name":"Lo and Li, Twin Tutors","color":"B","colorRaw":"B","rarity":"U","alsa":6.61,"gihWR":55.0,"nGIH":13595,"gnsWR":54.4,"nGNS":17508,"iih":0.6},{"name":"Mai, Scornful Striker","color":"B","colorRaw":"B","rarity":"R","alsa":3.61,"gihWR":53.9,"nGIH":12454,"gnsWR":52.8,"nGNS":16369,"iih":1.1},{"name":"Merchant of Many Hats","color":"B","colorRaw":"B","rarity":"C","alsa":6.71,"gihWR":54.6,"nGIH":73315,"gnsWR":54.7,"nGNS":94804,"iih":-0.1},{"name":"Northern Air Temple","color":"B","colorRaw":"B","rarity":"U","alsa":7.31,"gihWR":52.0,"nGIH":6986,"gnsWR":43.6,"nGNS":7585,"iih":8.4},{"name":"Obsessive Pursuit","color":"B","colorRaw":"B","rarity":"R","alsa":2.43,"gihWR":58.9,"nGIH":25803,"gnsWR":52.8,"nGNS":31770,"iih":6.1},{"name":"Ozai's Cruelty","color":"B","colorRaw":"B","rarity":"U","alsa":5.94,"gihWR":56.4,"nGIH":20598,"gnsWR":54.0,"nGNS":25824,"iih":2.3},{"name":"Phoenix Fleet Airship","color":"B","colorRaw":"B","rarity":"M","alsa":2.16,"gihWR":62.0,"nGIH":15312,"gnsWR":51.8,"nGNS":18730,"iih":10.2},{"name":"Pirate Peddlers","color":"B","colorRaw":"B","rarity":"C","alsa":6.77,"gihWR":51.7,"nGIH":46198,"gnsWR":51.9,"nGNS":59680,"iih":-0.2},{"name":"Raven Eagle","color":"B","colorRaw":"B","rarity":"R","alsa":2.06,"gihWR":62.7,"nGIH":30484,"gnsWR":53.2,"nGNS":37010,"iih":9.4},{"name":"The Rise of Sozin","color":"B","colorRaw":"B","rarity":"M","alsa":1.7,"gihWR":67.4,"nGIH":17948,"gnsWR":52.8,"nGNS":20853,"iih":14.6},{"name":"Ruinous Waterbending","color":"B","colorRaw":"B","rarity":"U","alsa":6.99,"gihWR":51.2,"nGIH":7197,"gnsWR":51.4,"nGNS":9184,"iih":-0.2},{"name":"Sold Out","color":"B","colorRaw":"B","rarity":"C","alsa":4.31,"gihWR":56.9,"nGIH":128135,"gnsWR":54.2,"nGNS":163774,"iih":2.6},{"name":"Swampsnare Trap","color":"B","colorRaw":"B","rarity":"C","alsa":5.38,"gihWR":54.4,"nGIH":82424,"gnsWR":53.5,"nGNS":105347,"iih":0.9},{"name":"Tundra Tank","color":"B","colorRaw":"B","rarity":"U","alsa":7.11,"gihWR":53.9,"nGIH":9199,"gnsWR":54.1,"nGNS":12660,"iih":-0.2},{"name":"Wolfbat","color":"B","colorRaw":"B","rarity":"U","alsa":6.28,"gihWR":54.1,"nGIH":21987,"gnsWR":53.5,"nGNS":27226,"iih":0.6},{"name":"Zuko's Conviction","color":"B","colorRaw":"B","rarity":"U","alsa":5.92,"gihWR":52.3,"nGIH":22029,"gnsWR":53.6,"nGNS":28781,"iih":-1.3},{"name":"Boar-q-pine","color":"R","colorRaw":"R","rarity":"C","alsa":7.5,"gihWR":51.6,"nGIH":26220,"gnsWR":52.8,"nGNS":34183,"iih":-1.2},{"name":"Bumi Bash","color":"R","colorRaw":"R","rarity":"C","alsa":6.28,"gihWR":52.2,"nGIH":51726,"gnsWR":52.9,"nGNS":70501,"iih":-0.7},{"name":"The Cave of Two Lovers","color":"R","colorRaw":"R","rarity":"U","alsa":4.03,"gihWR":59.9,"nGIH":54130,"gnsWR":56.4,"nGNS":72464,"iih":3.5},{"name":"Combustion Man","color":"R","colorRaw":"R","rarity":"U","alsa":4.89,"gihWR":52.7,"nGIH":20582,"gnsWR":52.1,"nGNS":28786,"iih":0.6},{"name":"Combustion Technique","color":"R","colorRaw":"R","rarity":"U","alsa":3.23,"gihWR":58.6,"nGIH":58518,"gnsWR":54.7,"nGNS":73983,"iih":3.9},{"name":"Crescent Island Temple","color":"R","colorRaw":"R","rarity":"U","alsa":6.79,"gihWR":54.3,"nGIH":9732,"gnsWR":43.7,"nGNS":9964,"iih":10.6},{"name":"Cunning Maneuver","color":"R","colorRaw":"R","rarity":"C","alsa":7.4,"gihWR":54.2,"nGIH":37426,"gnsWR":55.1,"nGNS":54412,"iih":-0.9},{"name":"Deserter's Disciple","color":"R","colorRaw":"R","rarity":"C","alsa":7.14,"gihWR":53.8,"nGIH":61179,"gnsWR":55.9,"nGNS":87259,"iih":-2.1},{"name":"Fated Firepower","color":"R","colorRaw":"R","rarity":"M","alsa":3.71,"gihWR":57.5,"nGIH":9045,"gnsWR":54.6,"nGNS":12516,"iih":3.0},{"name":"Fire Nation Attacks","color":"R","colorRaw":"R","rarity":"U","alsa":5.37,"gihWR":55.0,"nGIH":31984,"gnsWR":55.1,"nGNS":44658,"iih":-0.1},{"name":"Fire Nation Cadets","color":"R","colorRaw":"R","rarity":"C","alsa":6.11,"gihWR":56.5,"nGIH":98471,"gnsWR":56.3,"nGNS":132281,"iih":0.2},{"name":"Fire Nation Raider","color":"R","colorRaw":"R","rarity":"C","alsa":8.08,"gihWR":50.4,"nGIH":18024,"gnsWR":53.4,"nGNS":25793,"iih":-2.9},{"name":"Fire Sages","color":"R","colorRaw":"R","rarity":"U","alsa":3.96,"gihWR":55.8,"nGIH":44593,"gnsWR":55.6,"nGNS":60822,"iih":0.3},{"name":"Firebender Ascension","color":"R","colorRaw":"R","rarity":"R","alsa":3.4,"gihWR":52.6,"nGIH":14079,"gnsWR":54.6,"nGNS":19886,"iih":-1.9},{"name":"Firebending Lesson","color":"R","colorRaw":"R","rarity":"C","alsa":3.35,"gihWR":58.2,"nGIH":156144,"gnsWR":54.9,"nGNS":201122,"iih":3.3},{"name":"Firebending Student","color":"R","colorRaw":"R","rarity":"R","alsa":3.5,"gihWR":51.8,"nGIH":13072,"gnsWR":53.3,"nGNS":17838,"iih":-1.6},{"name":"How to Start a Riot","color":"R","colorRaw":"R","rarity":"C","alsa":7.55,"gihWR":52.2,"nGIH":36692,"gnsWR":54.8,"nGNS":53544,"iih":-2.6},{"name":"Iroh's Demonstration","color":"R","colorRaw":"R","rarity":"U","alsa":2.84,"gihWR":58.8,"nGIH":57587,"gnsWR":54.8,"nGNS":74237,"iih":4.1},{"name":"Jeong Jeong, the Deserter","color":"R","colorRaw":"R","rarity":"U","alsa":4.46,"gihWR":52.4,"nGIH":31200,"gnsWR":54.1,"nGNS":42080,"iih":-1.8},{"name":"Jet's Brainwashing","color":"R","colorRaw":"R","rarity":"U","alsa":7.03,"gihWR":53.1,"nGIH":7286,"gnsWR":53.3,"nGNS":10836,"iih":-0.1},{"name":"The Last Agni Kai","color":"R","colorRaw":"R","rarity":"R","alsa":4.06,"gihWR":49.4,"nGIH":7843,"gnsWR":52.2,"nGNS":11149,"iih":-2.9},{"name":"The Legend of Roku","color":"R","colorRaw":"R","rarity":"M","alsa":1.64,"gihWR":63.0,"nGIH":16572,"gnsWR":54.0,"nGNS":20921,"iih":9.0},{"name":"Lightning Strike","color":"R","colorRaw":"R","rarity":"C","alsa":3.45,"gihWR":57.2,"nGIH":128616,"gnsWR":54.7,"nGNS":170946,"iih":2.5},{"name":"Mai, Jaded Edge","color":"R","colorRaw":"R","rarity":"U","alsa":4.64,"gihWR":53.1,"nGIH":33098,"gnsWR":54.7,"nGNS":44586,"iih":-1.6},{"name":"Mongoose Lizard","color":"R","colorRaw":"R","rarity":"C","alsa":7.7,"gihWR":52.7,"nGIH":23464,"gnsWR":53.9,"nGNS":31798,"iih":-1.2},{"name":"Price of Freedom","color":"R","colorRaw":"R","rarity":"U","alsa":7.63,"gihWR":48.6,"nGIH":3573,"gnsWR":51.6,"nGNS":4697,"iih":-3.0},{"name":"Ran and Shaw","color":"R","colorRaw":"R","rarity":"R","alsa":2.0,"gihWR":58.3,"nGIH":25938,"gnsWR":53.7,"nGNS":31271,"iih":4.6},{"name":"Redirect Lightning","color":"R","colorRaw":"R","rarity":"R","alsa":4.27,"gihWR":50.5,"nGIH":8820,"gnsWR":52.0,"nGNS":12063,"iih":-1.5},{"name":"Rough Rhino Cavalry","color":"R","colorRaw":"R","rarity":"C","alsa":7.99,"gihWR":51.1,"nGIH":13509,"gnsWR":53.3,"nGNS":19614,"iih":-2.1},{"name":"Solstice Revelations","color":"R","colorRaw":"R","rarity":"U","alsa":7.18,"gihWR":51.1,"nGIH":7501,"gnsWR":52.9,"nGNS":10305,"iih":-1.8},{"name":"Sozin's Comet","color":"R","colorRaw":"R","rarity":"M","alsa":5.58,"gihWR":43.0,"nGIH":602,"gnsWR":52.4,"nGNS":888,"iih":-9.3},{"name":"Tiger-Dillo","color":"R","colorRaw":"R","rarity":"U","alsa":7.03,"gihWR":55.8,"nGIH":13190,"gnsWR":54.4,"nGNS":18902,"iih":1.4},{"name":"Treetop Freedom Fighters","color":"R","colorRaw":"R","rarity":"C","alsa":6.58,"gihWR":54.4,"nGIH":65118,"gnsWR":55.3,"nGNS":94437,"iih":-0.9},{"name":"Twin Blades","color":"R","colorRaw":"R","rarity":"U","alsa":5.43,"gihWR":56.3,"nGIH":27851,"gnsWR":55.2,"nGNS":39965,"iih":1.1},{"name":"Ty Lee, Artful Acrobat","color":"R","colorRaw":"R","rarity":"U","alsa":4.93,"gihWR":53.8,"nGIH":29773,"gnsWR":54.7,"nGNS":41580,"iih":-1.0},{"name":"War Balloon","color":"R","colorRaw":"R","rarity":"U","alsa":5.78,"gihWR":53.7,"nGIH":21665,"gnsWR":54.2,"nGNS":30597,"iih":-0.5},{"name":"Wartime Protestors","color":"R","colorRaw":"R","rarity":"R","alsa":2.22,"gihWR":59.1,"nGIH":24142,"gnsWR":54.2,"nGNS":32963,"iih":4.9},{"name":"Yuyan Archers","color":"R","colorRaw":"R","rarity":"C","alsa":6.05,"gihWR":56.7,"nGIH":116711,"gnsWR":56.7,"nGNS":155966,"iih":-0.0},{"name":"Zhao, the Moon Slayer","color":"R","colorRaw":"R","rarity":"R","alsa":4.89,"gihWR":52.0,"nGIH":9699,"gnsWR":54.7,"nGNS":13466,"iih":-2.7},{"name":"Zuko, Exiled Prince","color":"R","colorRaw":"R","rarity":"U","alsa":4.64,"gihWR":53.0,"nGIH":27779,"gnsWR":54.0,"nGNS":38637,"iih":-1.1},{"name":"Allies at Last","color":"G","colorRaw":"G","rarity":"U","alsa":3.57,"gihWR":59.0,"nGIH":50787,"gnsWR":55.1,"nGNS":71611,"iih":3.8},{"name":"Avatar Destiny","color":"G","colorRaw":"G","rarity":"R","alsa":5.0,"gihWR":46.7,"nGIH":3904,"gnsWR":52.3,"nGNS":5781,"iih":-5.6},{"name":"Badgermole","color":"G","colorRaw":"G","rarity":"C","alsa":6.06,"gihWR":56.7,"nGIH":88826,"gnsWR":55.3,"nGNS":124435,"iih":1.5},{"name":"Badgermole Cub","color":"G","colorRaw":"G","rarity":"M","alsa":1.77,"gihWR":62.8,"nGIH":13351,"gnsWR":53.1,"nGNS":17671,"iih":9.7},{"name":"The Boulder, Ready to Rumble","color":"G","colorRaw":"G","rarity":"U","alsa":4.39,"gihWR":56.2,"nGIH":34688,"gnsWR":54.6,"nGNS":48482,"iih":1.6},{"name":"Bumi, King of Three Trials","color":"G","colorRaw":"G","rarity":"U","alsa":4.49,"gihWR":54.0,"nGIH":29547,"gnsWR":52.8,"nGNS":38344,"iih":1.2},{"name":"Cycle of Renewal","color":"G","colorRaw":"G","rarity":"C","alsa":6.43,"gihWR":50.6,"nGIH":48599,"gnsWR":52.0,"nGNS":63664,"iih":-1.4},{"name":"Diligent Zookeeper","color":"G","colorRaw":"G","rarity":"R","alsa":3.48,"gihWR":56.4,"nGIH":16137,"gnsWR":54.2,"nGNS":22257,"iih":2.2},{"name":"The Earth King","color":"G","colorRaw":"G","rarity":"R","alsa":1.76,"gihWR":64.3,"nGIH":27203,"gnsWR":53.3,"nGNS":36121,"iih":11.0},{"name":"Earth Kingdom General","color":"G","colorRaw":"G","rarity":"U","alsa":3.99,"gihWR":56.3,"nGIH":38388,"gnsWR":54.9,"nGNS":53734,"iih":1.5},{"name":"Earth Rumble","color":"G","colorRaw":"G","rarity":"U","alsa":4.71,"gihWR":54.0,"nGIH":31831,"gnsWR":54.6,"nGNS":45561,"iih":-0.6},{"name":"Earthbender Ascension","color":"G","colorRaw":"G","rarity":"R","alsa":2.07,"gihWR":62.5,"nGIH":26520,"gnsWR":53.7,"nGNS":34830,"iih":8.8},{"name":"Earthbending Lesson","color":"G","colorRaw":"G","rarity":"C","alsa":7.18,"gihWR":51.8,"nGIH":42846,"gnsWR":53.3,"nGNS":57854,"iih":-1.5},{"name":"Earthen Ally","color":"G","colorRaw":"G","rarity":"R","alsa":4.87,"gihWR":54.8,"nGIH":10196,"gnsWR":53.9,"nGNS":14116,"iih":0.8},{"name":"Elemental Teachings","color":"G","colorRaw":"G","rarity":"R","alsa":6.43,"gihWR":null,"nGIH":489,"gnsWR":45.3,"nGNS":658,"iih":null},{"name":"Flopsie, Bumi's Buddy","color":"G","colorRaw":"G","rarity":"U","alsa":4.31,"gihWR":55.1,"nGIH":33363,"gnsWR":54.5,"nGNS":48111,"iih":0.7},{"name":"Foggy Swamp Vinebender","color":"G","colorRaw":"G","rarity":"C","alsa":7.29,"gihWR":52.4,"nGIH":29710,"gnsWR":54.1,"nGNS":42722,"iih":-1.7},{"name":"Great Divide Guide","color":"G","colorRaw":"G","rarity":"R","alsa":2.17,"gihWR":62.2,"nGIH":25014,"gnsWR":53.7,"nGNS":32901,"iih":8.6},{"name":"Haru, Hidden Talent","color":"G","colorRaw":"G","rarity":"U","alsa":4.16,"gihWR":53.2,"nGIH":27244,"gnsWR":54.6,"nGNS":38410,"iih":-1.4},{"name":"Invasion Tactics","color":"G","colorRaw":"G","rarity":"U","alsa":6.05,"gihWR":50.8,"nGIH":13603,"gnsWR":55.4,"nGNS":20578,"iih":-4.6},{"name":"Kyoshi Island Plaza","color":"G","colorRaw":"G","rarity":"U","alsa":6.77,"gihWR":50.3,"nGIH":8050,"gnsWR":43.7,"nGNS":9038,"iih":6.6},{"name":"Leaves from the Vine","color":"G","colorRaw":"G","rarity":"U","alsa":6.48,"gihWR":52.4,"nGIH":10598,"gnsWR":52.8,"nGNS":15202,"iih":-0.5},{"name":"The Legend of Kyoshi","color":"G","colorRaw":"G","rarity":"M","alsa":1.88,"gihWR":59.7,"nGIH":13303,"gnsWR":53.2,"nGNS":17931,"iih":6.4},{"name":"Origin of Metalbending","color":"G","colorRaw":"G","rarity":"C","alsa":6.43,"gihWR":55.8,"nGIH":59373,"gnsWR":54.3,"nGNS":82740,"iih":1.5},{"name":"Ostrich-Horse","color":"G","colorRaw":"G","rarity":"C","alsa":6.44,"gihWR":56.9,"nGIH":98026,"gnsWR":56.2,"nGNS":134320,"iih":0.8},{"name":"Pillar Launch","color":"G","colorRaw":"G","rarity":"C","alsa":7.91,"gihWR":55.9,"nGIH":27370,"gnsWR":56.4,"nGNS":41886,"iih":-0.5},{"name":"Raucous Audience","color":"G","colorRaw":"G","rarity":"C","alsa":5.19,"gihWR":56.5,"nGIH":103027,"gnsWR":55.5,"nGNS":143530,"iih":0.9},{"name":"Rebellious Captives","color":"G","colorRaw":"G","rarity":"C","alsa":5.91,"gihWR":55.1,"nGIH":97315,"gnsWR":56.0,"nGNS":136264,"iih":-0.9},{"name":"Rockalanche","color":"G","colorRaw":"G","rarity":"U","alsa":5.96,"gihWR":54.8,"nGIH":19071,"gnsWR":54.8,"nGNS":27424,"iih":-0.0},{"name":"Rocky Rebuke","color":"G","colorRaw":"G","rarity":"C","alsa":4.9,"gihWR":56.5,"nGIH":102425,"gnsWR":55.2,"nGNS":147117,"iih":1.3},{"name":"Saber-Tooth Moose-Lion","color":"G","colorRaw":"G","rarity":"C","alsa":6.69,"gihWR":53.2,"nGIH":51433,"gnsWR":53.9,"nGNS":69075,"iih":-0.8},{"name":"Seismic Sense","color":"G","colorRaw":"G","rarity":"U","alsa":5.27,"gihWR":55.6,"nGIH":37162,"gnsWR":54.6,"nGNS":48236,"iih":1.1},{"name":"Shared Roots","color":"G","colorRaw":"G","rarity":"U","alsa":4.32,"gihWR":54.3,"nGIH":36887,"gnsWR":53.0,"nGNS":48348,"iih":1.3},{"name":"Sparring Dummy","color":"G","colorRaw":"G","rarity":"U","alsa":6.53,"gihWR":52.4,"nGIH":21086,"gnsWR":53.6,"nGNS":28045,"iih":-1.2},{"name":"Toph, the Blind Bandit","color":"G","colorRaw":"G","rarity":"U","alsa":3.44,"gihWR":58.2,"nGIH":46390,"gnsWR":55.0,"nGNS":63955,"iih":3.2},{"name":"True Ancestry","color":"G","colorRaw":"G","rarity":"U","alsa":4.56,"gihWR":54.9,"nGIH":42303,"gnsWR":54.1,"nGNS":55904,"iih":0.8},{"name":"Turtle-Duck","color":"G","colorRaw":"G","rarity":"C","alsa":7.87,"gihWR":53.3,"nGIH":21466,"gnsWR":53.3,"nGNS":30153,"iih":0.0},{"name":"Unlucky Cabbage Merchant","color":"G","colorRaw":"G","rarity":"U","alsa":4.39,"gihWR":53.9,"nGIH":43558,"gnsWR":54.2,"nGNS":50766,"iih":-0.3},{"name":"Walltop Sentries","color":"G","colorRaw":"G","rarity":"C","alsa":5.55,"gihWR":55.1,"nGIH":86989,"gnsWR":54.7,"nGNS":117001,"iih":0.4},{"name":"Aang, at the Crossroads","color":"Multicolor","colorRaw":"WUG","rarity":"R","alsa":2.28,"gihWR":61.8,"nGIH":25661,"gnsWR":52.1,"nGNS":32249,"iih":9.7},{"name":"Aang, Swift Savior","color":"Multicolor","colorRaw":"WU","rarity":"R","alsa":1.81,"gihWR":64.8,"nGIH":30698,"gnsWR":53.7,"nGNS":36553,"iih":11.2},{"name":"Abandon Attachments","color":"Multicolor","colorRaw":"UR","rarity":"C","alsa":5.06,"gihWR":55.3,"nGIH":120251,"gnsWR":54.4,"nGNS":143550,"iih":0.9},{"name":"Air Nomad Legacy","color":"Multicolor","colorRaw":"WU","rarity":"U","alsa":5.4,"gihWR":54.7,"nGIH":23338,"gnsWR":53.8,"nGNS":30403,"iih":0.9},{"name":"Avatar Aang","color":"Multicolor","colorRaw":"WURG","rarity":"M","alsa":3.05,"gihWR":53.9,"nGIH":8495,"gnsWR":49.8,"nGNS":10563,"iih":4.1},{"name":"Azula, Cunning Usurper","color":"Multicolor","colorRaw":"UB","rarity":"R","alsa":2.53,"gihWR":62.9,"nGIH":29684,"gnsWR":51.7,"nGNS":33647,"iih":11.2},{"name":"Beifong's Bounty Hunters","color":"Multicolor","colorRaw":"BG","rarity":"R","alsa":2.97,"gihWR":60.0,"nGIH":23166,"gnsWR":52.9,"nGNS":30658,"iih":7.1},{"name":"Bitter Work","color":"Multicolor","colorRaw":"RG","rarity":"U","alsa":5.72,"gihWR":52.2,"nGIH":18470,"gnsWR":53.3,"nGNS":25991,"iih":-1.1},{"name":"Bumi, Unleashed","color":"Multicolor","colorRaw":"RG","rarity":"M","alsa":1.91,"gihWR":63.3,"nGIH":14474,"gnsWR":52.4,"nGNS":18705,"iih":10.8},{"name":"Cat-Owl","color":"Multicolor","colorRaw":"WU","rarity":"C","alsa":6.36,"gihWR":53.2,"nGIH":44807,"gnsWR":54.0,"nGNS":58399,"iih":-0.8},{"name":"Cruel Administrator","color":"Multicolor","colorRaw":"BR","rarity":"U","alsa":5.87,"gihWR":51.3,"nGIH":15203,"gnsWR":51.6,"nGNS":21478,"iih":-0.3},{"name":"Dai Li Agents","color":"Multicolor","colorRaw":"BG","rarity":"U","alsa":5.32,"gihWR":57.9,"nGIH":29709,"gnsWR":53.7,"nGNS":40870,"iih":4.1},{"name":"Dragonfly Swarm","color":"Multicolor","colorRaw":"UR","rarity":"U","alsa":4.58,"gihWR":57.9,"nGIH":53819,"gnsWR":54.6,"nGNS":61163,"iih":3.2},{"name":"Earth Kingdom Soldier","color":"Multicolor","colorRaw":"WG","rarity":"C","alsa":6.52,"gihWR":55.5,"nGIH":54356,"gnsWR":56.1,"nGNS":78549,"iih":-0.5},{"name":"Earth King's Lieutenant","color":"Multicolor","colorRaw":"WG","rarity":"R","alsa":2.74,"gihWR":59.8,"nGIH":18358,"gnsWR":54.7,"nGNS":26442,"iih":5.1},{"name":"Earth Rumble Wrestlers","color":"Multicolor","colorRaw":"RG","rarity":"C","alsa":7.79,"gihWR":53.2,"nGIH":18098,"gnsWR":54.3,"nGNS":25585,"iih":-1.1},{"name":"Earth Village Ruffians","color":"Multicolor","colorRaw":"BG","rarity":"C","alsa":6.57,"gihWR":53.8,"nGIH":54576,"gnsWR":54.6,"nGNS":73855,"iih":-0.8},{"name":"Fire Lord Azula","color":"Multicolor","colorRaw":"UBR","rarity":"R","alsa":3.79,"gihWR":50.7,"nGIH":10238,"gnsWR":49.1,"nGNS":12269,"iih":1.5},{"name":"Fire Lord Zuko","color":"Multicolor","colorRaw":"WBR","rarity":"R","alsa":5.09,"gihWR":46.3,"nGIH":2546,"gnsWR":45.4,"nGNS":3413,"iih":0.9},{"name":"Foggy Swamp Spirit Keeper","color":"Multicolor","colorRaw":"UB","rarity":"U","alsa":4.35,"gihWR":59.8,"nGIH":61424,"gnsWR":53.4,"nGNS":66695,"iih":6.4},{"name":"Guru Pathik","color":"Multicolor","colorRaw":"UG","rarity":"U","alsa":3.96,"gihWR":57.5,"nGIH":51307,"gnsWR":54.4,"nGNS":60006,"iih":3.1},{"name":"Hama, the Bloodbender","color":"Multicolor","colorRaw":"UB","rarity":"U","alsa":4.32,"gihWR":54.4,"nGIH":46827,"gnsWR":53.4,"nGNS":55004,"iih":1.0},{"name":"Hei Bai, Spirit of Balance","color":"Multicolor","colorRaw":"WB","rarity":"U","alsa":4.24,"gihWR":53.5,"nGIH":31716,"gnsWR":53.7,"nGNS":42428,"iih":-0.2},{"name":"Hermitic Herbalist","color":"Multicolor","colorRaw":"UG","rarity":"U","alsa":4.69,"gihWR":57.1,"nGIH":40687,"gnsWR":52.9,"nGNS":51004,"iih":4.2},{"name":"Iroh, Grand Lotus","color":"Multicolor","colorRaw":"URG","rarity":"R","alsa":2.93,"gihWR":58.9,"nGIH":24869,"gnsWR":50.9,"nGNS":28398,"iih":7.9},{"name":"Iroh, Tea Master","color":"Multicolor","colorRaw":"WR","rarity":"R","alsa":3.98,"gihWR":57.6,"nGIH":16405,"gnsWR":54.9,"nGNS":23182,"iih":2.7},{"name":"Jet, Freedom Fighter","color":"Multicolor","colorRaw":"WR","rarity":"U","alsa":3.4,"gihWR":57.0,"nGIH":46124,"gnsWR":56.2,"nGNS":66961,"iih":0.8},{"name":"Katara, the Fearless","color":"Multicolor","colorRaw":"WUG","rarity":"R","alsa":3.53,"gihWR":51.4,"nGIH":10947,"gnsWR":50.4,"nGNS":14687,"iih":1.0},{"name":"Katara, Water Tribe's Hope","color":"Multicolor","colorRaw":"WU","rarity":"R","alsa":2.08,"gihWR":61.8,"nGIH":29993,"gnsWR":54.0,"nGNS":36187,"iih":7.9},{"name":"The Lion-Turtle","color":"Multicolor","colorRaw":"UG","rarity":"R","alsa":3.87,"gihWR":57.1,"nGIH":16334,"gnsWR":51.1,"nGNS":19072,"iih":6.0},{"name":"Long Feng, Grand Secretariat","color":"Multicolor","colorRaw":"BG","rarity":"U","alsa":4.62,"gihWR":51.9,"nGIH":23912,"gnsWR":52.8,"nGNS":33075,"iih":-0.9},{"name":"Messenger Hawk","color":"Multicolor","colorRaw":"UB","rarity":"C","alsa":4.36,"gihWR":57.6,"nGIH":183164,"gnsWR":55.4,"nGNS":216509,"iih":2.2},{"name":"Ozai, the Phoenix King","color":"Multicolor","colorRaw":"BR","rarity":"M","alsa":2.72,"gihWR":58.9,"nGIH":9326,"gnsWR":50.2,"nGNS":11923,"iih":8.7},{"name":"Platypus-Bear","color":"Multicolor","colorRaw":"UG","rarity":"C","alsa":7.48,"gihWR":52.8,"nGIH":47448,"gnsWR":54.2,"nGNS":57375,"iih":-1.4},{"name":"Pretending Poxbearers","color":"Multicolor","colorRaw":"WB","rarity":"C","alsa":4.75,"gihWR":55.3,"nGIH":122182,"gnsWR":56.3,"nGNS":167751,"iih":-1.0},{"name":"Professor Zei, Anthropologist","color":"Multicolor","colorRaw":"UR","rarity":"U","alsa":4.76,"gihWR":55.6,"nGIH":45198,"gnsWR":53.8,"nGNS":52855,"iih":1.8},{"name":"Sandbender Scavengers","color":"Multicolor","colorRaw":"WB","rarity":"R","alsa":4.75,"gihWR":51.4,"nGIH":9495,"gnsWR":52.7,"nGNS":12333,"iih":-1.4},{"name":"Sokka, Bold Boomeranger","color":"Multicolor","colorRaw":"UR","rarity":"R","alsa":4.2,"gihWR":54.3,"nGIH":13843,"gnsWR":51.7,"nGNS":16391,"iih":2.5},{"name":"Sokka, Lateral Strategist","color":"Multicolor","colorRaw":"WU","rarity":"U","alsa":2.62,"gihWR":58.3,"nGIH":66014,"gnsWR":55.2,"nGNS":82717,"iih":3.1},{"name":"Sokka, Tenacious Tactician","color":"Multicolor","colorRaw":"WUR","rarity":"R","alsa":3.0,"gihWR":54.7,"nGIH":15224,"gnsWR":50.9,"nGNS":18975,"iih":3.8},{"name":"Suki, Kyoshi Warrior","color":"Multicolor","colorRaw":"WG","rarity":"U","alsa":3.09,"gihWR":55.2,"nGIH":36823,"gnsWR":55.0,"nGNS":52523,"iih":0.2},{"name":"Sun Warriors","color":"Multicolor","colorRaw":"WR","rarity":"U","alsa":4.77,"gihWR":53.7,"nGIH":27694,"gnsWR":54.7,"nGNS":40947,"iih":-1.0},{"name":"Tolls of War","color":"Multicolor","colorRaw":"WB","rarity":"U","alsa":5.22,"gihWR":58.7,"nGIH":35453,"gnsWR":53.7,"nGNS":44907,"iih":5.0},{"name":"Toph, Hardheaded Teacher","color":"Multicolor","colorRaw":"RG","rarity":"R","alsa":2.63,"gihWR":58.3,"nGIH":23329,"gnsWR":52.9,"nGNS":29986,"iih":5.4},{"name":"Toph, the First Metalbender","color":"Multicolor","colorRaw":"WRG","rarity":"R","alsa":3.17,"gihWR":56.5,"nGIH":15610,"gnsWR":51.8,"nGNS":20880,"iih":4.7},{"name":"Uncle Iroh","color":"Multicolor","colorRaw":"RG","rarity":"U","alsa":5.02,"gihWR":52.7,"nGIH":23567,"gnsWR":53.1,"nGNS":31958,"iih":-0.4},{"name":"Vindictive Warden","color":"Multicolor","colorRaw":"BR","rarity":"C","alsa":6.84,"gihWR":54.1,"nGIH":43071,"gnsWR":55.0,"nGNS":59975,"iih":-0.9},{"name":"Wandering Musicians","color":"Multicolor","colorRaw":"WR","rarity":"C","alsa":6.12,"gihWR":54.8,"nGIH":77656,"gnsWR":57.0,"nGNS":112029,"iih":-2.2},{"name":"White Lotus Reinforcements","color":"Multicolor","colorRaw":"WG","rarity":"U","alsa":3.78,"gihWR":57.3,"nGIH":38124,"gnsWR":55.5,"nGNS":54601,"iih":1.7},{"name":"Zhao, Ruthless Admiral","color":"Multicolor","colorRaw":"BR","rarity":"U","alsa":6.15,"gihWR":51.1,"nGIH":12880,"gnsWR":52.0,"nGNS":17670,"iih":-0.9},{"name":"Zuko, Conflicted","color":"Multicolor","colorRaw":"BR","rarity":"R","alsa":5.21,"gihWR":49.8,"nGIH":4988,"gnsWR":50.5,"nGNS":7286,"iih":-0.7},{"name":"Barrels of Blasting Jelly","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.37,"gihWR":54.7,"nGIH":93948,"gnsWR":54.4,"nGNS":116867,"iih":0.3},{"name":"Bender's Waterskin","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":7.3,"gihWR":53.6,"nGIH":32601,"gnsWR":53.1,"nGNS":40045,"iih":0.5},{"name":"Fire Nation Warship","color":"Colorless","colorRaw":"Colorless","rarity":"U","alsa":5.55,"gihWR":57.7,"nGIH":46160,"gnsWR":56.1,"nGNS":59770,"iih":1.6},{"name":"Kyoshi Battle Fan","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.18,"gihWR":55.5,"nGIH":118055,"gnsWR":57.0,"nGNS":156578,"iih":-1.5},{"name":"Meteor Sword","color":"Colorless","colorRaw":"Colorless","rarity":"U","alsa":6.32,"gihWR":51.5,"nGIH":16358,"gnsWR":53.7,"nGNS":21505,"iih":-2.2},{"name":"Planetarium of Wan Shi Tong","color":"Colorless","colorRaw":"Colorless","rarity":"M","alsa":1.69,"gihWR":58.2,"nGIH":16153,"gnsWR":53.4,"nGNS":20890,"iih":4.7},{"name":"Trusty Boomerang","color":"Colorless","colorRaw":"Colorless","rarity":"U","alsa":8.32,"gihWR":45.3,"nGIH":1417,"gnsWR":53.2,"nGNS":1946,"iih":-7.9},{"name":"The Walls of Ba Sing Se","color":"Colorless","colorRaw":"Colorless","rarity":"M","alsa":4.82,"gihWR":41.4,"nGIH":801,"gnsWR":46.8,"nGNS":1123,"iih":-5.4},{"name":"White Lotus Tile","color":"Colorless","colorRaw":"Colorless","rarity":"M","alsa":5.27,"gihWR":null,"nGIH":472,"gnsWR":50.3,"nGNS":767,"iih":null},{"name":"Abandoned Air Temple","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":1.98,"gihWR":61.6,"nGIH":28859,"gnsWR":55.1,"nGNS":38429,"iih":6.5},{"name":"Agna Qel'a","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":3.56,"gihWR":57.1,"nGIH":30075,"gnsWR":54.3,"nGNS":35464,"iih":2.8},{"name":"Airship Engine Room","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.01,"gihWR":55.5,"nGIH":63252,"gnsWR":54.1,"nGNS":75856,"iih":1.5},{"name":"Ba Sing Se","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":2.69,"gihWR":59.4,"nGIH":24886,"gnsWR":54.8,"nGNS":33042,"iih":4.6},{"name":"Boiling Rock Prison","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.63,"gihWR":54.4,"nGIH":37156,"gnsWR":53.0,"nGNS":48398,"iih":1.4},{"name":"Fire Nation Palace","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":5.0,"gihWR":52.7,"nGIH":11073,"gnsWR":54.1,"nGNS":15321,"iih":-1.4},{"name":"Foggy Bottom Swamp","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.99,"gihWR":55.2,"nGIH":40648,"gnsWR":54.5,"nGNS":54113,"iih":0.6},{"name":"Jasmine Dragon Tea Shop","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":3.11,"gihWR":56.7,"nGIH":19724,"gnsWR":54.4,"nGNS":26409,"iih":2.4},{"name":"Kyoshi Village","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":5.86,"gihWR":54.8,"nGIH":51301,"gnsWR":55.2,"nGNS":71239,"iih":-0.3},{"name":"Meditation Pools","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.02,"gihWR":55.1,"nGIH":59058,"gnsWR":54.3,"nGNS":73476,"iih":0.8},{"name":"Misty Palms Oasis","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.68,"gihWR":55.8,"nGIH":42380,"gnsWR":54.1,"nGNS":54464,"iih":1.7},{"name":"North Pole Gates","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":5.59,"gihWR":56.1,"nGIH":65106,"gnsWR":55.4,"nGNS":83683,"iih":0.7},{"name":"Omashu City","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.21,"gihWR":55.0,"nGIH":52142,"gnsWR":54.3,"nGNS":68235,"iih":0.7},{"name":"Realm of Koh","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":3.6,"gihWR":57.7,"nGIH":22068,"gnsWR":54.5,"nGNS":27859,"iih":3.2},{"name":"Rumble Arena","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":5.92,"gihWR":56.4,"nGIH":107310,"gnsWR":54.9,"nGNS":139472,"iih":1.5},{"name":"Secret Tunnel","color":"Colorless","colorRaw":"Colorless","rarity":"R","alsa":3.23,"gihWR":57.8,"nGIH":25845,"gnsWR":54.9,"nGNS":35293,"iih":2.9},{"name":"Serpent's Pass","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.29,"gihWR":57.1,"nGIH":64447,"gnsWR":54.1,"nGNS":76048,"iih":3.0},{"name":"Sun-Blessed Peak","color":"Colorless","colorRaw":"Colorless","rarity":"C","alsa":6.13,"gihWR":54.2,"nGIH":47849,"gnsWR":54.9,"nGNS":66692,"iih":-0.7},{"name":"White Lotus Hideout","color":"Colorless","colorRaw":"Colorless","rarity":"U","alsa":6.56,"gihWR":52.7,"nGIH":20753,"gnsWR":51.0,"nGNS":25634,"iih":1.7}]
+;
+
+  const COLOR_ORDER = ["W", "U", "B", "R", "G", "Colorless", "Multicolor"];
+  const COLORS = [
+    { key: "W", label: "White", dot: "legend-dot-W" },
+    { key: "U", label: "Blue", dot: "legend-dot-U" },
+    { key: "B", label: "Black", dot: "legend-dot-B" },
+    { key: "R", label: "Red", dot: "legend-dot-R" },
+    { key: "G", label: "Green", dot: "legend-dot-G" },
+    { key: "Colorless", label: "Colorless", dot: "legend-dot-Colorless" },
+    { key: "Multicolor", label: "Multicolor", dot: "legend-dot-Multicolor" }
+  ];
+  const RARITY_ORDER = ["C", "U", "R", "M"];
+  const RARITIES = [
+    { key: "C", label: "Common", dot: "legend-dot-C" },
+    { key: "U", label: "Uncommon", dot: "legend-dot-Ur" },
+    { key: "R", label: "Rare", dot: "legend-dot-R2" },
+    { key: "M", label: "Mythic", dot: "legend-dot-M" }
+  ];
+
+  const COLUMNS = [
+    { key: "name", label: "Card", type: "text" },
+    { key: "color", label: "Color", type: "colorChip" },
+    { key: "rarity", label: "Rarity", type: "rarityChip" },
+    { key: "gihWR", label: "GIH WR", type: "pct1", nKey: "nGIH" },
+    { key: "gnsWR", label: "GNS WR", type: "pct1", nKey: "nGNS" },
+    { key: "iih", label: "IIH", type: "delta" },
+    { key: "alsa", label: "ALSA", type: "num2" }
+  ];
+
+  const state = {
+    sortKey: "name",
+    sortDir: "asc",
+    activeColors: new Set(),
+    activeRarities: new Set(),
+    search: "",
+    showN: false
+  };
+
+  function fmtInt(n) {
+    return n == null ? "" : n.toLocaleString("en-US");
+  }
+
+  function sortValue(row, col) {
+    if (col.type === "text") return row.name.toLowerCase();
+    if (col.type === "colorChip") return COLOR_ORDER.indexOf(row.color);
+    if (col.type === "rarityChip") return RARITY_ORDER.indexOf(row.rarity);
+    return row[col.key];
+  }
+
+  function compareRows(a, b) {
+    const col = COLUMNS.find(c => c.key === state.sortKey);
+    const av = sortValue(a, col);
+    const bv = sortValue(b, col);
+    const dirMul = state.sortDir === "asc" ? 1 : -1;
+    if (col.type === "text") return av.localeCompare(bv) * dirMul;
+    const aNull = av === null || av === undefined;
+    const bNull = bv === null || bv === undefined;
+    if (aNull && bNull) return 0;
+    if (aNull) return 1;
+    if (bNull) return -1;
+    return (av - bv) * dirMul;
+  }
+
+  function filteredRows() {
+    const term = state.search.trim().toLowerCase();
+    return DATA.filter(d => {
+      if (term && !d.name.toLowerCase().includes(term)) return false;
+      if (state.activeColors.size && !state.activeColors.has(d.color)) return false;
+      if (state.activeRarities.size && !state.activeRarities.has(d.rarity)) return false;
+      return true;
+    });
+  }
+
+  function cellContent(row, col) {
+    if (col.type === "text") {
+      const td = document.createElement("td");
+      td.className = "name-cell";
+      td.textContent = row.name;
+      return td;
+    }
+    if (col.type === "colorChip") {
+      const td = document.createElement("td");
+      const span = document.createElement("span");
+      const display = row.color === "Multicolor" ? row.colorRaw : row.color;
+      span.className = "chip chip-color-" + row.color;
+      span.textContent = display;
+      span.title = row.color === "Multicolor" ? "Multicolor (" + row.colorRaw + ")" : COLORS.find(c => c.key === row.color).label;
+      td.appendChild(span);
+      return td;
+    }
+    if (col.type === "rarityChip") {
+      const td = document.createElement("td");
+      const span = document.createElement("span");
+      span.className = "chip chip-rarity-" + row.rarity;
+      span.textContent = row.rarity;
+      span.title = RARITIES.find(r => r.key === row.rarity).label;
+      td.appendChild(span);
+      return td;
+    }
+    if (col.type === "num2") {
+      const td = document.createElement("td");
+      td.className = "num";
+      const v = row[col.key];
+      td.textContent = v == null ? "—" : v.toFixed(2);
+      if (v == null) td.classList.add("null-cell");
+      return td;
+    }
+    if (col.type === "pct1") {
+      const td = document.createElement("td");
+      td.className = "num";
+      const v = row[col.key];
+      if (v == null) {
+        td.textContent = "—";
+        td.classList.add("null-cell");
+        return td;
+      }
+      td.textContent = v.toFixed(1) + "%";
+      if (state.showN && col.nKey && row[col.nKey] != null) {
+        const sub = document.createElement("span");
+        sub.className = "n-sub";
+        sub.textContent = "n=" + fmtInt(row[col.nKey]);
+        td.appendChild(sub);
+      }
+      return td;
+    }
+    if (col.type === "delta") {
+      const td = document.createElement("td");
+      td.className = "num";
+      const v = row.iih;
+      if (v == null) {
+        td.textContent = "—";
+        td.classList.add("null-cell");
+        return td;
+      }
+      const span = document.createElement("span");
+      span.className = "delta " + (v > 0 ? "delta-up" : v < 0 ? "delta-down" : "");
+      const arrow = document.createElement("span");
+      arrow.className = "delta-arrow";
+      arrow.textContent = v > 0 ? "▲" : v < 0 ? "▼" : "";
+      span.appendChild(arrow);
+      span.appendChild(document.createTextNode((v > 0 ? "+" : "") + v.toFixed(1) + "pp"));
+      td.appendChild(span);
+      return td;
+    }
+  }
+
+  function renderHeader() {
+    const headerRow = document.getElementById("header-row");
+    headerRow.innerHTML = "";
+    COLUMNS.forEach(col => {
+      const th = document.createElement("th");
+      if (col.type === "num2" || col.type === "pct1" || col.type === "delta") th.classList.add("num");
+      th.setAttribute("aria-sort", state.sortKey === col.key ? (state.sortDir === "asc" ? "ascending" : "descending") : "none");
+      const label = document.createElement("span");
+      label.textContent = col.label + " ";
+      const arrow = document.createElement("span");
+      arrow.className = "sort-arrow";
+      th.appendChild(label);
+      th.appendChild(arrow);
+      th.addEventListener("click", () => {
+        if (state.sortKey === col.key) {
+          state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        } else {
+          state.sortKey = col.key;
+          state.sortDir = col.type === "text" ? "asc" : "desc";
+        }
+        render();
+      });
+      headerRow.appendChild(th);
+    });
+  }
+
+  function renderChips() {
+    const colorWrap = document.getElementById("color-filters");
+    COLORS.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "chip-toggle";
+      btn.setAttribute("aria-pressed", "false");
+      btn.dataset.key = c.key;
+      const dot = document.createElement("span");
+      dot.className = "dot " + c.dot;
+      const label = document.createElement("span");
+      label.textContent = c.label;
+      btn.appendChild(dot);
+      btn.appendChild(label);
+      btn.addEventListener("click", () => {
+        if (state.activeColors.has(c.key)) { state.activeColors.delete(c.key); btn.setAttribute("aria-pressed", "false"); }
+        else { state.activeColors.add(c.key); btn.setAttribute("aria-pressed", "true"); }
+        render();
+      });
+      colorWrap.appendChild(btn);
+    });
+
+    const rarityWrap = document.getElementById("rarity-filters");
+    RARITIES.forEach(r => {
+      const btn = document.createElement("button");
+      btn.className = "chip-toggle";
+      btn.setAttribute("aria-pressed", "false");
+      btn.dataset.key = r.key;
+      const dot = document.createElement("span");
+      dot.className = "dot " + r.dot;
+      const label = document.createElement("span");
+      label.textContent = r.label;
+      btn.appendChild(dot);
+      btn.appendChild(label);
+      btn.addEventListener("click", () => {
+        if (state.activeRarities.has(r.key)) { state.activeRarities.delete(r.key); btn.setAttribute("aria-pressed", "false"); }
+        else { state.activeRarities.add(r.key); btn.setAttribute("aria-pressed", "true"); }
+        render();
+      });
+      rarityWrap.appendChild(btn);
+    });
+  }
+
+  function renderTable(rows) {
+    const tbody = document.getElementById("table-body");
+    tbody.innerHTML = "";
+    rows.forEach(row => {
+      const tr = document.createElement("tr");
+      COLUMNS.forEach(col => tr.appendChild(cellContent(row, col)));
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderSummary(rows) {
+    document.getElementById("summary-text").innerHTML =
+      "Showing <strong>" + rows.length + "</strong> of " + DATA.length + " cards";
+    const col = COLUMNS.find(c => c.key === state.sortKey);
+    const numericCol = (col.type === "num2" || col.type === "pct1" || col.type === "delta") ? col : COLUMNS.find(c => c.key === "gihWR");
+    const vals = rows.map(r => r[numericCol.key]).filter(v => v != null);
+    const avgEl = document.getElementById("summary-avg");
+    if (!vals.length) { avgEl.textContent = ""; return; }
+    const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
+    const suffix = numericCol.type === "pct1" ? "%" : numericCol.type === "delta" ? "pp" : "";
+    avgEl.innerHTML = "Avg " + numericCol.label + ": <strong>" + avg.toFixed(2) + suffix + "</strong>";
+  }
+
+  function render() {
+    const rows = filteredRows().sort(compareRows);
+    renderHeader();
+    renderTable(rows);
+    renderSummary(rows);
+  }
+
+  document.getElementById("search").addEventListener("input", e => { state.search = e.target.value; render(); });
+  document.getElementById("show-n").addEventListener("change", e => { state.showN = e.target.checked; render(); });
+  document.getElementById("clear-filters").addEventListener("click", () => {
+    state.search = "";
+    state.activeColors.clear();
+    state.activeRarities.clear();
+    document.getElementById("search").value = "";
+    document.querySelectorAll(".chip-toggle").forEach(b => b.setAttribute("aria-pressed", "false"));
+    render();
+  });
+
+  renderChips();
+  render();
+})();
+</script>
